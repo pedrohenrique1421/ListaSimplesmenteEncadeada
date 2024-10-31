@@ -26,6 +26,17 @@ struct Node* criarNo(int id, const char *marca, char tipo, float preco) {
     return newNode;
 }
 
+struct Node* getNoById(struct Node** head, int id) {
+    struct Node* current = head;
+    while (current != NULL) {
+        if (current->id == id) {
+            return current; // Retorna o nó se o ID for encontrado
+        }
+        current = current->next; // Avança para o próximo nó
+    }
+    return NULL; // Retorna NULL se o nó não for encontrado
+}
+
 // Função para imprimir a lista
 void listarElementos(struct Node* head) {
     struct Node* current = head;
@@ -37,23 +48,20 @@ void listarElementos(struct Node* head) {
     printf("- TAIL -");
 }
 
+void listarElemento(struct Node** head, int id){
+	struct Node* current = getNoById(*head, id);
+    printf("\n\n- --- -\n");
+	printf("--> | id: %i, tipo: %c, marca: %s, preco = %.2f | -->\n", current->id, current->tipo, current->marca, current->preco);
+	current = current->next;
+    printf("- --- -");
+}
+
 // Função para adicionar um nó no início da lista
 void inserirElemento(struct Node** head_ref, const char *nova_marca, const char tipo, float preco) {
     struct Node* new_node = criarNo(ids, nova_marca, tipo, preco);
     ids++;
     new_node->next = *head_ref;
     *head_ref = new_node;
-}
-
-struct Node* getNoById(struct Node** head, int id) {
-    struct Node* current = head;
-    while (current != NULL) {
-        if (current->id == id) {
-            return current; // Retorna o nó se o ID for encontrado
-        }
-        current = current->next; // Avança para o próximo nó
-    }
-    return NULL; // Retorna NULL se o nó não for encontrado
 }
 
 void inserirElementoID(struct Node** head_ref, int id, const char *nova_marca, const char tipo, float preco) {
@@ -100,29 +108,149 @@ void removerNo(struct Node** head_ref, int position) {
     temp->next = next; // Ajusta o ponteiro para ignorar o nó removido
 }
 
+void atualizarNo(struct Node** head, int id, const char *marca, char tipo, float preco){
+	struct Node* no = getNoById(*head, id);
+	if(no == NULL){
+		printf("\n\nno nao encontrado para a atualizacao");
+		return;
+	}
+	no->tipo = tipo;
+    no->preco = preco;
+    strcpy(no->marca, marca);
+}
+
+int getTamanho(struct Node* head){
+	struct Node* current = head;
+	int tamanho = 0;
+    while (current != NULL) {
+        tamanho++;
+        current = current->next;
+    }
+    
+    printf("\n\ntamanho = %i\n", tamanho);
+    return tamanho;
+}
+
+struct Node* excluirLista(struct Node* head){
+	struct Node* current = head;
+	struct Node* back;
+	while (current != NULL) {
+        back = current;
+		current = current->next;
+  		free(back);
+    }
+    return NULL;
+}
+
+void salvarListaEmArquivo(struct Node* head, const char* nome_arquivo) {
+    FILE* arquivo = fopen(nome_arquivo, "w"); // Abre o arquivo para escrita
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo %s.\n", nome_arquivo);
+        return;
+    }
+
+    struct Node* current = head;
+    while (current != NULL) {
+        // Grava cada nó no arquivo no formato desejado
+        fprintf(arquivo, "%d;%c;%s;%.2f\n", current->id, current->tipo, current->marca, current->preco);
+        current = current->next;
+    }
+
+    fclose(arquivo); // Fecha o arquivo
+    printf("Lista salva no arquivo %s com sucesso!\n", nome_arquivo);
+}
+
+void carregarListaDeArquivo(struct Node** head, const char* nome_arquivo) {
+    FILE* arquivo = fopen(nome_arquivo, "r"); // Abre o arquivo para leitura
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo %s.\n", nome_arquivo);
+        return;
+    }
+
+    int id;
+    char tipo;
+    char marca[50];
+    float preco;
+
+    // Lê cada linha do arquivo e insere os dados na lista
+    while (fscanf(arquivo, "%d;%c;%49[^;];%f\n", &id, &tipo, marca, &preco) == 4) {
+        struct Node* new_node = criarNo(id, marca, tipo, preco);
+        new_node->next = *head; // Insere no início
+        *head = new_node; // Atualiza o head
+    }
+
+    fclose(arquivo); // Fecha o arquivo
+    printf("Lista carregada do arquivo %s com sucesso!\n", nome_arquivo);
+}
+
+void salvarListaEmArquivoInvertido(struct Node* head, const char* nome_arquivo) {
+    FILE* arquivo = fopen(nome_arquivo, "w"); // Abre o arquivo para escrita
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo %s.\n", nome_arquivo);
+        return;
+    }
+
+    // Cria um vetor para armazenar os nós
+    struct Node* nos[100]; // Supondo que a lista não terá mais que 100 elementos
+    int count = 0;
+
+    struct Node* current = head;
+    while (current != NULL) {
+        nos[count++] = current; // Armazena o ponteiro do nó
+        current = current->next;
+    }
+
+    // Grava os nós na ordem inversa
+    int i;
+    for (i = count - 1; i >= 0; i--) {
+        fprintf(arquivo, "%d;%c;%s;%.2f\n", nos[i]->id, nos[i]->tipo, nos[i]->marca, nos[i]->preco);
+    }
+
+    fclose(arquivo); // Fecha o arquivo
+    printf("Lista salva no arquivo %s em ordem invertida com sucesso!\n", nome_arquivo);
+}
+
 int main() {
     struct Node* head = NULL; // Inicializa a lista vazia
 
-    // Adiciona elementos à lista
-    inserirElemento(&head, "caloi", 'E', 1299.90);// E = ergometrica, S = Spining
-    inserirElemento(&head, "zummi", 'S', 2499.90);
-    inserirElemento(&head, "mormaii", 'E', 5199.90);
-    inserirElemento(&head, "ogs", 'E', 1299.90);// E = ergometrica, S = Spining
-    inserirElemento(&head, "bike soul", 'S', 2499.90);
-    inserirElemento(&head, "bike and cia s.a.", 'E', 5199.90);
+    //Adiciona elementos à lista
+    // inserirElemento(&head, "caloi", 'E', 1299.90);// E = ergometrica, S = Spining
+    // inserirElemento(&head, "zummi", 'S', 2499.90);
+    // inserirElemento(&head, "mormaii", 'E', 5199.90);
+    // inserirElemento(&head, "ogs", 'E', 1299.90);
+    // inserirElemento(&head, "bike soul", 'S', 2499.90);
+    // inserirElemento(&head, "bike and cia s.a.", 'E', 5199.90);
+// 
+    //Imprime a lista
+    // listarElementos(head);
+    // 
+    // inserirElementoID(&head, 1, "tsw", 'S', 999.99);
+    // 
+    // listarElementos(head);
+    // 
+    // removerNo(&head, 0);
+    // 
+    // listarElementos(head);
+    // 
+    // atualizarNo(&head, 3, "audax", 'E', 1799.90);
+    // 
+    // listarElementos(head);
+    // 
+    // atualizarNo(&head, 0, "abcd", 'E', 1799.90);
+    // 
+    // listarElementos(head);
+    // 
+    // listarElemento(&head, 5);
+    // 
+    // getTamanho(head);
+    // 
+    // salvarListaEmArquivo(head, "listaDebicicletas.txt");
 
-    // Imprime a lista
-    listarElementos(head);
+    carregarListaDeArquivo(&head, "listaDebicicletas.txt");
     
-    inserirElementoID(&head, 1, "tsw", 'S', 999.99);
-    
-    listarElementos(head);
-    
-    removerNo(&head, 0);
+    // salvarListaEmArquivoInvertido(head, "listaDebicicletas.txt");
     
     listarElementos(head);
-
-    // Libera a memória (não implementado para simplicidade)
 
     return 1;
 }

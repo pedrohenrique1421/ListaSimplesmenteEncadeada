@@ -1,0 +1,6 @@
+0;E;caloi;1299.90
+1;S;zummi;2499.90
+2;E;mormaii;5199.90
+3;E;ogs;1299.90
+4;S;bike soul;2499.90
+5;E;bike and cia s.a.;5199.90
